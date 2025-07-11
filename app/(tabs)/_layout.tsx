@@ -1,43 +1,110 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+/* eslint-disable react/display-name */
+import { Tabs } from "expo-router";
+import React from "react";
+import { Platform, Text } from "react-native";
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import HomeIcon from "@/assets/icons/HomeIcon";
+import { HapticTab } from "@/components/HapticTab";
+import { Colors } from "@/constants/Colors";
+import { resFont, resHeight } from "@/utils/utils";
+
+import HistoryIcon from "@/assets/icons/HistoryIcon";
+import HistoryIconOutline from "@/assets/icons/HistoryIconOutline";
+import HomeIconOutline from "@/assets/icons/HomeIconOutline";
+import NotificationIcon from "@/assets/icons/NotificationIcon";
+import NotificationIconOutline from "@/assets/icons/NotificationIconOutline";
+import ProfileIcon from "@/assets/icons/ProfileIcon";
+import ProfileIconOutline from "@/assets/icons/ProfileIconOutline";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const renderLabel =
+    (label: string) =>
+    ({ focused }: { color: string; focused: boolean }) =>
+      (
+        <Text
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.5)",
+            color: Colors.dark.background,
+            padding: resHeight(1),
+            borderRadius: resHeight(3),
+            fontSize: resFont(10),
+            fontWeight: "bold",
+            opacity: focused ? 1 : 0.4,
+          }}
+        >
+          {label}
+        </Text>
+      );
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors.dark.background,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
+            position: "absolute",
           },
           default: {},
         }),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Dashboard",
+          tabBarLabel: renderLabel("Dashboard"),
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <HomeIcon
+                fill={focused ? Colors.dark.background : "#A9A9A9"}
+                stroke="#fff"
+              />
+            ) : (
+              <HomeIconOutline />
+            ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "History",
+          tabBarLabel: renderLabel("History"),
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <HistoryIcon fill={Colors.dark.background} stroke="#fff" />
+            ) : (
+              <HistoryIconOutline />
+            ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="notification"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Loan",
+          tabBarLabel: renderLabel("Notifications"),
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <NotificationIcon stroke={Colors.dark.background} />
+            ) : (
+              <NotificationIconOutline />
+            ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarLabel: renderLabel("Profile"),
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <ProfileIcon stroke={Colors.dark.background} />
+            ) : (
+              <ProfileIconOutline />
+            ),
         }}
       />
     </Tabs>
