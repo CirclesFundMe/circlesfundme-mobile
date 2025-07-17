@@ -37,17 +37,16 @@ export default function NotificationsScreen() {
       },
     });
 
-  const notificationsData = data?.pages
+    const notificationsData = data?.pages
     ? data.pages
         .flatMap((page) => page?.data || [])
         .reduce((acc, item) => {
-          const dateKey = moment(item.createdDate)
-            .format("DD MMMM")
-            .toUpperCase();
+          const adjustedDate = moment(item.createdDate).add(1, "hours"); 
+          const dateKey = adjustedDate.format("DD MMMM").toUpperCase();
           const formatted = {
             id: item.id,
             title: item.title,
-            time: moment(item.createdDate).format("h:mm A"),
+            time: adjustedDate.format("h:mm A"),
             amount:
               item.type === "Contribution"
                 ? `+₦${item.data}`
@@ -55,7 +54,6 @@ export default function NotificationsScreen() {
                 ? `-₦${item.data}`
                 : null,
           };
-
           const section = acc.find(
             (s: { title: string }) => s.title === dateKey
           );
@@ -67,6 +65,7 @@ export default function NotificationsScreen() {
           return acc;
         }, [])
     : [];
+  
 
   const insets = useSafeAreaInsets();
 

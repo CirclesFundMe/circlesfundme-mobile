@@ -28,7 +28,7 @@ export default function TabLayout() {
             padding: resHeight(1),
             borderRadius: resHeight(3),
             fontSize: resFont(10),
-            fontWeight: "bold",
+            fontFamily: "OutfitSemiBold",
             opacity: focused ? 1 : 0.4,
           }}
         >

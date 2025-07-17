@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import Button from "@/components/ui/Buttton";
 import Input from "@/components/ui/Input";
 import Loader from "@/components/ui/Loader";
@@ -42,7 +42,7 @@ export default function PaymentSettingScreen() {
     data?: {
       email: string;
       withdrawalSetting: {
-        id: "c48a5d53-d6c5-41e9-bb72-4d76235533f6";
+        id:string;
         accountNumber: string;
         accountName: string;
         bankCode: string;

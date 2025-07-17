@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import Button from "@/components/ui/Buttton";
 import Input from "@/components/ui/Input";
 import ProgressStepsBar from "@/components/ui/ProgressStepsBar";
@@ -153,6 +153,7 @@ export default function WithdrawScreen() {
             value={accountNumber}
             onChangeText={setAccountNumber}
             keyboardType="numeric"
+            maxLength={10}
           />
           <SelectInput
             label="Bank"

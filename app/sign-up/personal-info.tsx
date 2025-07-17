@@ -31,6 +31,31 @@ export default function PersonalInfo() {
       });
       return;
     }
+
+    const phoneDigits = phone.replace(/\D/g, "");
+
+    const isValidNigerianPhone = /^0[789][01]\d{8}$/.test(phoneDigits);
+
+    if (!isValidNigerianPhone) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Phone Number",
+        text2:
+          "Enter a valid Nigerian phone number (e.g. 0803..., 0901..., 0706...).",
+      });
+      return;
+    }
+
+    const age = moment().diff(moment(dob, "DD/MM/YYYY"), "years");
+    if (age < 18) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Age",
+        text2: "You must be at least 18 years old to continue.",
+      });
+      return;
+    }
+
     router.push({
       pathname: "/sign-up/verify-identity",
       params: {
@@ -41,7 +66,6 @@ export default function PersonalInfo() {
       },
     });
   };
-  
 
   return (
     <ScrollView

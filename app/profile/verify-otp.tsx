@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import Loader from "@/components/ui/Loader";
 import { Colors } from "@/constants/Colors";
 import handleFetch from "@/services/api/handleFetch";
@@ -138,7 +138,7 @@ export default function VerifyEmail() {
           </View>
           <Text style={styles.verifyEmailText}>OTP Verification</Text>
           <Text style={styles.verifyEmailSubText}>
-            Kindly enter the 5-digit verification code sent to{" "}
+            Kindly enter the 6-digit verification code sent to{" "}
             <Text style={{ fontFamily: "OutfitSemiBold" }}>
               {userData.data?.email}
             </Text>{" "}

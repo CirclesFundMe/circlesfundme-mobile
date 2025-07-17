@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 /* eslint-disable react/jsx-key */
 /* eslint-disable import/no-duplicates */
 "use client";
@@ -36,6 +35,7 @@ export default function DashboardScreen() {
     queryKey: ["users-me"],
     queryFn: () => handleFetch({ endpoint: "users/me", auth: true }),
   });
+
   const { data: walletData } = useQuery({
     queryKey: ["financials-my-wallets"],
     queryFn: () =>
@@ -328,21 +328,27 @@ export default function DashboardScreen() {
                     </Text>
                   </View>
 
-                  {/* Divider */}
                   <View style={styles.dividerLine} />
 
-                  {/* Bank Details */}
                   <View style={styles.bankDetailsSection}>
                     <View style={styles.bankHeader}>
                       <Text style={styles.bankDetailsLabel}>
                         Recipient Bank Details
                       </Text>
-                      <Text style={styles.accountNumber}>0012345678</Text>
+                      <Text style={styles.accountNumber}>
+                        {userData?.data?.withdrawalSetting?.accountNumber ||
+                          "N/A"}
+                      </Text>
                     </View>
 
                     <View style={styles.bankInfo}>
-                      <Text style={styles.accountName}>Ryan Reynolds</Text>
-                      <Text style={styles.bankName}>Wema Bank</Text>
+                      <Text style={styles.accountName}>
+                        {userData?.data?.withdrawalSetting?.accountName ||
+                          "N/A"}
+                      </Text>
+                      <Text style={styles.bankName}>
+                        {userData?.data?.withdrawalSetting?.bankName || "N/A"}
+                      </Text>
                     </View>
                   </View>
                 </View>

@@ -1,5 +1,7 @@
+"use client";
+
 import { Colors } from "@/constants/Colors";
-import { resFont, resHeight, resWidth } from "@/utils/utils";
+import { formatMoney, resFont, resHeight, resWidth } from "@/utils/utils";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -32,11 +34,13 @@ interface InputProps {
   showInfoIcon?: boolean;
   infoTitle?: string;
   infoContent?: string;
+  valueType?: string; 
 }
 
 const Input: React.FC<InputProps> = ({
   label,
   value,
+  valueType,
   onChangeText,
   placeholder,
   secureTextEntry = false,
@@ -56,6 +60,15 @@ const Input: React.FC<InputProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
 
   const toggleSecureEntry = () => setHidePassword(!hidePassword);
+
+  const handleTextChange = (text: string) => {
+    if (valueType === "money") {
+      const formatted = formatMoney(text);
+      onChangeText?.(formatted);
+    } else {
+      onChangeText?.(text);
+    }
+  };
 
   return (
     <>
@@ -82,13 +95,14 @@ const Input: React.FC<InputProps> = ({
                 editable === false && { backgroundColor: "#F5F5F5" },
               ]}
               value={value}
-              onChangeText={onChangeText}
+              onChangeText={handleTextChange}
               placeholder={placeholder}
               placeholderTextColor="#999"
               secureTextEntry={secureTextEntry ? hidePassword : false}
               keyboardType={keyboardType}
               editable={editable ?? type !== "date"}
               maxLength={keyboardType === "phone-pad" ? 11 : maxLength}
+              onTouchStart={type === "date" ? onPressDate : undefined}
               pointerEvents={type === "date" ? "none" : "auto"}
             />
 
@@ -116,19 +130,21 @@ const Input: React.FC<InputProps> = ({
       </TouchableWithoutFeedback>
 
       <Modal transparent visible={modalVisible} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <AntDesign name="closecircleo" size={18} color="black" />
-            </TouchableOpacity>
-            <Ionicons name="alert-circle-outline" size={60} color="#555" />
-            <Text style={styles.modalTitle}>{infoTitle}</Text>
-            <Text style={styles.modalSubtitle}>{infoContent}</Text>
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <AntDesign name="closecircleo" size={18} color="black" />
+              </TouchableOpacity>
+              <Ionicons name="alert-circle-outline" size={60} color="#555" />
+              <Text style={styles.modalTitle}>{infoTitle}</Text>
+              <Text style={styles.modalSubtitle}>{infoContent}</Text>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </>
   );
@@ -141,7 +157,6 @@ const styles = StyleSheet.create({
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
-    // justifyContent: "space-between",
     gap: 5,
     marginBottom: resHeight(1),
   },

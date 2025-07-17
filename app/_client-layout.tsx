@@ -6,7 +6,6 @@ export default function ClientLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
 
-      {/* Sign Up */}
       <Stack.Screen name="sign-up/verify-email" options={{ headerShown: false }} />
       <Stack.Screen name="sign-up/create-account" options={{ headerShown: false }} />
       <Stack.Screen name="sign-up/verification-success" options={{ headerShown: false }} />
@@ -19,25 +18,20 @@ export default function ClientLayout() {
       <Stack.Screen name="sign-up/contribution-scheme" options={{ headerShown: false }} />
       <Stack.Screen name="sign-up/onboarding" options={{ headerShown: false }} />
 
-      {/* Sign In & Auth */}
       <Stack.Screen name="sign-in/login" options={{ headerShown: false }} />
       <Stack.Screen name="auth/forgot-password" options={{ headerShown: false }} />
       <Stack.Screen name="auth/reset-password" options={{ headerShown: false }} />
 
-      {/* Payment Setup */}
       <Stack.Screen name="payment-setup/card-info" options={{ headerShown: false }} />
       <Stack.Screen name="payment-setup/payment-method" options={{ headerShown: false }} />
       <Stack.Screen name="payment-setup/confirm-beneficiary" options={{ headerShown: false }} />
       <Stack.Screen name="payment-setup/withdraw-setup" options={{ headerShown: false }} />
 
-      {/* Loan Setup */}
       <Stack.Screen name="loan-setup/loan-application" options={{ headerShown: false }} />
       <Stack.Screen name="loan-setup/loan-application-success" options={{ headerShown: false }} />
 
-      {/* Withdrawals */}
       <Stack.Screen name="withdrawal-setup/withdrawal-application-success" options={{ headerShown: false }} />
 
-      {/* Profile */}
       <Stack.Screen name="profile/profile-setting" options={{ headerShown: false }} />
       <Stack.Screen name="profile/update-password-setting" options={{ headerShown: false }} />
       <Stack.Screen name="profile/card-setting" options={{ headerShown: false }} />
@@ -46,7 +40,6 @@ export default function ClientLayout() {
       <Stack.Screen name="profile/verify-otp" options={{ headerShown: false }} />
       <Stack.Screen name="profile/setting-success" options={{ headerShown: false }} />
 
-      {/* Landing */}
       <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>
   );

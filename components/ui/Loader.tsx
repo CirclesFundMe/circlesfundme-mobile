@@ -1,15 +1,30 @@
+import { resFont } from "@/utils/utils";
 import React from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 type LoaderProps = {
   size?: number | "small" | "large";
   color?: string;
+  message?: string;
 };
 
-const Loader = ({ size = "large", color = "#069E6B" }: LoaderProps) => {
+const Loader = ({
+  message = "Loading...",
+  size = "large",
+  color = "#069E6B",
+}: LoaderProps) => {
   return (
     <View style={styles.container}>
       <ActivityIndicator size={size} color={color} />
+      <Text
+        style={{
+          fontSize: resFont(10),
+          fontFamily: "OutfitMedium",
+          color: "#069E6B",
+        }}
+      >
+        {message}
+      </Text>
     </View>
   );
 };

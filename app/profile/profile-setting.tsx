@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -18,7 +17,7 @@ import { Colors } from "@/constants/Colors";
 import { PROFILE_IMG } from "@/constants/Image";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import handleFetch from "@/services/api/handleFetch";
-import { resFont, resHeight } from "@/utils/utils";
+import { formatAmount, resFont, resHeight } from "@/utils/utils";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
@@ -356,18 +355,18 @@ export default function ProfileSetting() {
             scheme === "Monthly Scheme" ? "monthly" : "weekly"
           } income (NGN)?`}
           placeholder="Enter Amount"
-          value={income}
+          value={formatAmount(income)}
           editable={false}
           onChangeText={setIncome}
           keyboardType="phone-pad"
         />
-
         <Input
           label={`What’s your preferred ${
             scheme === "Monthly Scheme" ? "monthly" : "weekly"
           } contribution`}
           placeholder="Enter Amount"
-          value={contribution}
+          value={formatAmount(contribution)}
+          valueType="money"
           editable={false}
           onChangeText={setContribution}
           keyboardType="phone-pad"
@@ -379,9 +378,7 @@ export default function ProfileSetting() {
             income.
           </Text>
         )}
-
         {error ? <Text style={styles.error}>{error}</Text> : null}
-
         <View style={{ marginBottom: resHeight(5) }} />
         <Button title="Continue" onPress={handleSubmit} />
         <View style={{ marginBottom: resHeight(5) }} />

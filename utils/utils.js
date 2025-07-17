@@ -1,11 +1,11 @@
-import { isIphoneX } from 'react-native-iphone-x-helper';
-import { Platform, StatusBar, Dimensions } from 'react-native';
+import { Dimensions, Platform, StatusBar } from "react-native";
+import { isIphoneX } from "react-native-iphone-x-helper";
 
-export const { width, height } = Dimensions.get('window');
+export const { width, height } = Dimensions.get("window");
 
 const deviceHeight = isIphoneX()
-  ? height - 78 // iPhone X style SafeAreaView size in portrait
-  : Platform.OS === 'android'
+  ? height - 78
+  : Platform.OS === "android"
   ? height - StatusBar.currentHeight
   : height;
 
@@ -18,36 +18,33 @@ const responsiveWidth = (w) => {
 };
 
 const RFValue = (fontSize) => {
-  // guideline height for standard 5" device screen
   const standardScreenHeight = 680;
   const heightPercent = (fontSize * deviceHeight) / standardScreenHeight;
   return Math.round(heightPercent);
 };
 
-// utils/formatters.ts
-
 export const formatAmount = (value) => {
-  const num = typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
+  const num =
+    typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
   if (isNaN(num)) return "";
   return `₦${num.toLocaleString()}`;
 };
 
-export const formatNumber = (value)=> {
-  const num = typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
+export const formatNumber = (value) => {
+  const num =
+    typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
   if (isNaN(num)) return "";
   return num.toLocaleString();
 };
 
 export const formattedAmount = (value) => {
-  // Remove any non-numeric characters except for decimal points
-  const cleanedValue = value.replace(/[^\d.]/g, '');
+  const cleanedValue = value.replace(/[^\d.]/g, "");
 
-  // Convert to a number and format with commas
   const numberValue = parseFloat(cleanedValue);
 
-  if (isNaN(numberValue)) return '₦0.00';
+  if (isNaN(numberValue)) return "₦0.00";
 
-  return `₦${numberValue.toLocaleString('en-US', {
+  return `₦${numberValue.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -57,11 +54,11 @@ export const roundNegativeTowardsZero = (num) => {
   return num < 0 ? 0 : num;
 };
 
-export const toTitleCase=(str)=> {
-  return str?.replace(/\w\S*/g, function(txt) {
+export const toTitleCase = (str) => {
+  return str?.replace(/\w\S*/g, function (txt) {
     return txt?.charAt(0)?.toUpperCase() + txt?.substr(1)?.toLowerCase();
   });
-}
+};
 
 export const resFont = (val) => RFValue(val);
 export const resHeight = (val) => responsiveHeight(val);
@@ -75,4 +72,15 @@ export const getGreeting = () => {
   return "Good Evening";
 };
 
-export const toNumber = (val) => parseFloat(val.replace(/,/g, "")) || 0;
+export const toNumber = (val) => {
+  if (val === null || val === undefined) return 0;
+
+  const str = typeof val === "number" ? val.toString() : val;
+  return parseFloat(str.replace(/,/g, "")) || 0;
+};
+
+export const formatMoney = (value) => {
+  const numericValue = value?.replace(/[^0-9]/g, "");
+  if (!numericValue) return "";
+  return Number(numericValue)?.toLocaleString("en-NG");
+};

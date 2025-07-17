@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import Loader from "@/components/ui/Loader";
 import { Colors } from "@/constants/Colors";
 import handleFetch from "@/services/api/handleFetch";
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   footerLink: {
     color: Colors.dark.primary,
     fontWeight: "500",
-    fontFamily: "OutfitBold",
+    fontFamily: "OutfitMedium",
   },
   groupText: {
     flexDirection: "row",
