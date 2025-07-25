@@ -1,20 +1,29 @@
 import { Colors } from "@/constants/Colors";
-import { resFont, resHeight } from "@/utils/utils";
+import { formatAmount, resFont, resHeight } from "@/utils/utils";
 import React from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 
-export default function ContributionsCard() {
+interface ContributionBreakDownCardProps {
+  onPressApply?: () => void;
+  amount?: number;
+  installmentDesc?: string;
+}
+
+export default function ContributionCard({
+  amount = 0,
+  installmentDesc = "0 of 52",
+}: ContributionBreakDownCardProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Contributions made</Text>
       <View style={styles.divider} />
       <View style={styles.row}>
         <Text style={styles.label}>Subscription amount</Text>
-        <Text style={styles.value}>₦ 12,000</Text>
+        <Text style={styles.value}> {formatAmount(amount)}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Installments</Text>
-        <Text style={styles.value}>5 of 12</Text>
+        <Text style={styles.value}>{installmentDesc}</Text>
       </View>
     </View>
   );
@@ -25,7 +34,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
-    marginTop:resHeight(2),
+    marginTop: resHeight(2),
     ...Platform.select({
       android: { elevation: 2 },
       ios: { shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4 },
@@ -40,7 +49,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#CCCCCC',
+    backgroundColor: "#CCCCCC",
     marginBottom: resHeight(1.5),
   },
   row: {
@@ -51,12 +60,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: resFont(13),
     color: "#999",
-    fontFamily: "OutfitRegular", 
+    fontFamily: "OutfitRegular",
   },
   value: {
     fontSize: resFont(13),
     color: "#1A1A1A",
     fontWeight: "700",
-    fontFamily: "OutfitMedium", 
+    fontFamily: "OutfitMedium",
   },
 });

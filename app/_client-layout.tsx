@@ -34,7 +34,8 @@ export default function ClientLayout() {
 
       <Stack.Screen name="profile/profile-setting" options={{ headerShown: false }} />
       <Stack.Screen name="profile/update-password-setting" options={{ headerShown: false }} />
-      <Stack.Screen name="profile/card-setting" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/verify-card-otp" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/update-card-info" options={{ headerShown: false }} />
       <Stack.Screen name="profile/payment-setting" options={{ headerShown: false }} />
       <Stack.Screen name="profile/notification" options={{ headerShown: false }} />
       <Stack.Screen name="profile/verify-otp" options={{ headerShown: false }} />

@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -14,7 +14,7 @@ import { Colors } from "@/constants/Colors";
 import handleFetch from "@/services/api/handleFetch";
 import { resHeight } from "@/utils/utils";
 import { AntDesign } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import Button from "../../components/ui/Buttton";
@@ -22,6 +22,7 @@ import Input from "../../components/ui/Input";
 
 export default function UpdatePassword() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
 
   const [otp, setOTP] = useState("");
@@ -59,6 +60,7 @@ export default function UpdatePassword() {
       });
 
       router.push("/(tabs)/profile");
+      queryClient.invalidateQueries({ queryKey: ["users-me"] });
     },
     onError: (error: any) => {
       Toast.show({

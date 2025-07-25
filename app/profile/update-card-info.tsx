@@ -8,48 +8,48 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 
-export default function CardInfoScreen() {
+export default function UpdateCardInfoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { url } = useLocalSearchParams();
-
+  
   const handleCancelAndCompareWallet = async () => {
     const previousWallet = queryClient.getQueryData<any>([
       "financials-my-wallets",
     ]);
-
+  
     await queryClient.invalidateQueries({
       queryKey: ["financials-my-wallets"],
     });
-
+  
     const res = await handleFetch({
       endpoint: "financials/my-wallets",
       auth: true,
     });
-
+  
     const latestWallet = res;
-
+  
     if (!latestWallet?.data || !previousWallet?.data) {
       router.back();
       return;
     }
-
+  
     const getContributionBalance = (walletRes: any) =>
-      walletRes?.data?.find((item: any) => item.title === "Your contribution")
-        ?.balance ?? "";
-
+      walletRes?.data?.find((item: any) => item.title === "Your contribution")?.balance ?? "";
+  
     const prevBalance = getContributionBalance(previousWallet);
     const newBalance = getContributionBalance(latestWallet);
-
+  
     queryClient.setQueryData(["financials-my-wallets"], latestWallet);
-
+  
     if (prevBalance !== newBalance) {
-      router.push("/payment-setup/withdraw-setup");
+      router.push("/profile");
     } else {
       router.back();
     }
   };
+  
 
   const handleNavigationStateChange = (navState: any) => {
     const { url: currentUrl } = navState;

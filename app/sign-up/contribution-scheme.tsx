@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 import handleFetch from "@/services/api/handleFetch";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -92,6 +93,7 @@ export default function ContributionScheme() {
     eligibleLoan: "",
     preLoanServiceCharge: "",
     baseContributionAmount: 0,
+    totalRepayment: 0,
   });
   const [regularBreakdown, setRegularBreakdown] = useState<any>({
     principalLoan: "",
@@ -134,6 +136,7 @@ export default function ContributionScheme() {
         eligibleLoan: breakdown.eligibleLoan,
         preLoanServiceCharge: breakdown.preLoanServiceCharge,
         baseContributionAmount: breakdown.baseContributionAmount,
+        totalRepayment: breakdown.totalRepayment,
       });
     },
     onError: (error: any) => {
@@ -314,6 +317,7 @@ export default function ContributionScheme() {
       setError("Please select a contribution scheme.");
       return;
     }
+    [];
 
     if (isAssetFinance) {
       if (!assetCost) {
@@ -359,56 +363,65 @@ export default function ContributionScheme() {
 
     const intlPhone = phone?.replace(/^0/, "+234");
     const cost = Number(assetCost?.replace(/,/g, ""));
-    const fileName = selfieUri?.split("/").pop();
-    const fileExtension = fileName?.split(".").pop()?.toLowerCase();
-    const mimeType =
-      fileExtension === "jpg" || fileExtension === "jpeg"
-        ? "image/jpeg"
-        : fileExtension === "png"
-        ? "image/png"
-        : "";
+
     const [day, month, year] = dob.split("/");
     const isoDob = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
     const formData = new FormData();
-    formData.append("FullName", String(fullName));
-    formData.append("PhoneNumber", String(intlPhone));
-    formData.append("Selfie", {
-      uri: String(selfieUri),
-      name: String(fileName),
-      type: String(mimeType),
-    } as any);
-    formData.append("Selfie", String(selfieUri));
-    formData.append("DateOfBirth", String(isoDob));
-    formData.append("Gender", String(gender));
-    formData.append("Address", String(userAddress));
-    formData.append("BVN", String(bvn));
-    formData.append("ContributionSchemeId", String(selectedSchemeId));
-    formData.append("Income", String(income));
-    formData.append("CostOfVehicle", String(cost));
-    if (debouncedAdditionalContribution) {
-      formData.append(
-        "ContributionAmount",
-        String(debouncedAdditionalContribution)
-      );
+    formData.append("FullName", String(fullName || ""));
+    formData.append("PhoneNumber", String(intlPhone || ""));
+    formData.append("DateOfBirth", String(isoDob || ""));
+    formData.append("Gender", String(gender || ""));
+    formData.append("Address", String(userAddress || ""));
+    formData.append("BVN", String(bvn || ""));
+    formData.append("ContributionSchemeId", String(selectedSchemeId || ""));
+    formData.append("Income", String(income || ""));
+    formData.append("CostOfVehicle", String(cost || ""));
+    formData.append(
+      "ContributionAmount",
+      String(debouncedAdditionalContribution || contribution || "")
+    );
+    formData.append("WeekDay", String(remittanceWeekDay || ""));
+    formData.append("MonthDay", String(remittanceDayValue || ""));
+
+    if (selfieUri) {
+      const selfieFileName = selfieUri.split("/").pop();
+      const selfieExt = selfieFileName?.split(".").pop()?.toLowerCase();
+      const selfieMime =
+        selfieExt === "jpg" || selfieExt === "jpeg"
+          ? "image/jpeg"
+          : selfieExt === "png"
+          ? "image/png"
+          : "";
+      formData.append("Selfie", {
+        uri: String(selfieUri),
+        name: selfieFileName,
+        type: selfieMime,
+      } as any);
     } else {
-      formData.append("ContributionAmount", String(contribution));
+      formData.append("Selfie", "");
     }
-    formData.append("ContributionAmount", String(contribution));
-    formData.append("WeekDay", String(remittanceWeekDay));
-    formData.append("MonthDay", String(remittanceDayValue));
-    formData.append("WeekDay", String(remittanceWeekDay));
-    formData.append("MonthDay", String(remittanceDayValue));
-    formData.append("GovernmentIssuedID", {
-      uri: String(documentUri),
-      name: String(documentName),
-      type: String(documentType),
-    } as any);
-    formData.append("UtilityBill", {
-      uri: String(utilityBillUri),
-      name: String(utilityBillName),
-      type: String(utilityBillType),
-    } as any);
+
+    if (documentUri) {
+      formData.append("GovernmentIssuedID", {
+        uri: String(documentUri),
+        name: documentName,
+        type: documentType,
+      } as any);
+    } else {
+      formData.append("GovernmentIssuedID", "");
+    }
+
+    if (utilityBillUri) {
+      formData.append("UtilityBill", {
+        uri: String(utilityBillUri),
+        name: utilityBillName,
+        type: utilityBillType,
+      } as any);
+    } else {
+      formData.append("UtilityBill", "");
+    }
+
     submitUserDetailsMutation.mutate(formData);
   };
 
@@ -610,6 +623,18 @@ export default function ContributionScheme() {
                       infoContent={`Your ${
                         remittanceType === "Weekly" ? "weekly" : "monthly"
                       } contribution plus the pre-loan service charge.`}
+                    />
+                    <Input
+                      label="Total Repayment"
+                      placeholder="Enter Amount"
+                      value={`₦${vehicleBreakdown.totalRepayment}`}
+                      keyboardType="phone-pad"
+                      editable={false}
+                      showInfoIcon={true}
+                      infoTitle="Total Repayment"
+                      infoContent="Total Fees = Eligible Loan + Loan Management Fee.
+                      Post-Loan Charge (0.05%) = 0.05% of Total Fees * 48.
+                      Total repayment = Total Fees + Post-Loan Charges."
                     />
                     <Input
                       label="Post-Loan Weekly Repayment over 4 years"

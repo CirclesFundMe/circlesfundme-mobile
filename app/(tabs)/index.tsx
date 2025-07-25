@@ -4,7 +4,17 @@
 
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ContributionsCard from "@/components/dashboard/ContributionBreakDownCard";
@@ -13,14 +23,18 @@ import LoanCard from "@/components/dashboard/LoanCard";
 import RecentActivityList from "@/components/dashboard/RecentActivityList";
 import UserGreeting from "@/components/dashboard/UserGreeting";
 import Button from "@/components/ui/Buttton";
+import CustomCheckbox from "@/components/ui/CheckBox";
+import Input from "@/components/ui/Input";
+import Loader from "@/components/ui/Loader";
 import SetupNotice from "@/components/ui/SetupNotice";
 import { Colors } from "@/constants/Colors";
 import handleFetch from "@/services/api/handleFetch";
 import { resFont, resHeight } from "@/utils/utils";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dimensions } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -42,20 +56,49 @@ export default function DashboardScreen() {
       handleFetch({ endpoint: "financials/my-wallets", auth: true }),
   });
 
+  const { data: banksData } = useQuery({
+    queryKey: ["banks"],
+    queryFn: () => handleFetch({ endpoint: "financials/banks", auth: true }),
+  });
+
   const maxLoan = walletData?.data?.find(
     (item: WalletItem) => item.title === "Maximum Loan Eligible"
   );
-
   const contribution = walletData?.data?.find(
     (item: WalletItem) => item.title === "Your contribution"
   );
-
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loanStep, setLoanStep] = useState<
+    "notEligible" | "paymentIncomplete" | "loanApplication" | null
+  >(null);
+  const [waitlist, setWaitlist] = useState<
+    "active" | "pending" | "waitlist" | "Apply for Loan" | null
+  >(maxLoan?.action);
+  const [withdrawal, setWithdrawal] = useState<
+    "withdrawal" | "withdrawalFailed" | null
+  >(null);
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [deductChargeFromBalance, setDeductChargeFromBalance] = useState(true);
+  const queryClient = useQueryClient();
+
+  const loanStepValidation =
+    userData?.data?.onboardingStatus === "Completed"
+      ? userData?.data?.isPaymentSetupComplete
+        ? "loanApplication"
+        : "paymentIncomplete"
+      : "notEligible";
+
+  const selectedBankCode = banksData?.data?.find((item: { bankCode: string }) =>
+    item.bankCode
+      .toLowerCase()
+      .includes(userData?.data?.withdrawalSetting?.bankCode.toLowerCase())
+  )?.bankName;
 
   const data = [
     <LoanCard
-      onPressApply={() => setLoanStep("loanApplication")}
+      onPressApply={() => setLoanStep(loanStepValidation)}
       onWaitListPress={() => setWaitlist(maxLoan?.action)}
       loanStatus={maxLoan?.action ?? ""}
       amount={maxLoan?.balance ?? "₦ 0"}
@@ -71,31 +114,62 @@ export default function DashboardScreen() {
     />,
   ];
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [loanStep, setLoanStep] = useState<
-    "notEligible" | "paymentIncomplete" | "loanApplication" | null
-  >(null);
-  const [waitlist, setWaitlist] = useState<
-    "active" | "pending" | "waitlist" | "Apply for Loan" | null
-  >(maxLoan?.action);
-  const [withdrawal, setWithdrawal] = useState<
-    "withdrawal" | "withdrawalFailed" | null
-  >(null);
-
   const handleContinue = () => {
     setLoanStep(null);
     router.push("/loan-setup/loan-application");
   };
 
-  let withdrawalFailed = true;
+  const withdrawalMutation = useMutation({
+    mutationFn: (body: any) =>
+      handleFetch({
+        endpoint: "financials/withdraw",
+        method: "POST",
+        body,
+        auth: true,
+      }),
+    onSuccess: async (res: any) => {
+      if (res?.statusCode !== "200" && res?.status !== 200) {
+        Toast.show({
+          type: "error",
+          text1: "Withdrawal Failed",
+          text2: res?.message || "Unable to process withdrawal",
+        });
+        setWithdrawal("withdrawalFailed");
+        return;
+      }
+      Toast.show({
+        type: "success",
+        text1: "Withdrawal Successful",
+      });
+      setWithdrawal(null);
+      await queryClient.invalidateQueries({
+        queryKey: ["financials-my-wallets"],
+      });
+      router.push("/withdrawal-setup/withdrawal-application-success");
+    },
+    onError: (error: any) => {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.message || "Something went wrong",
+      });
+      setWithdrawal("withdrawalFailed");
+    },
+  });
 
   const handleWithdrawal = () => {
-    setWithdrawal(null);
-    if (withdrawalFailed) {
-      setWithdrawal("withdrawalFailed");
-    } else {
-      router.push("/withdrawal-setup/withdrawal-application-success");
+    const amount = parseFloat(withdrawalAmount.replace(/[^0-9.]/g, ""));
+    if (!amount || amount <= 0) {
+      Toast.show({
+        type: "error",
+        text1: "Enter a valid amount",
+      });
+      return;
     }
+    withdrawalMutation.mutate({
+      amount,
+      deductChargeFromBalance,
+    });
   };
 
   const renderWaitListedModal = () => {
@@ -171,8 +245,7 @@ export default function DashboardScreen() {
                   You&apos;re Not Yet Eligible for a Loan
                 </Text>
                 <Text style={styles.modalSubTitle}>
-                  To qualify for a loan, you need to complete weekly
-                  contribution for 12 weeks.
+                  To qualify for a loan, you need to complete your onboarding.
                 </Text>
               </View>
             </View>
@@ -292,72 +365,105 @@ export default function DashboardScreen() {
                 />
                 <Text style={styles.modalTitle}>Withdrawal Declined</Text>
                 <Text style={styles.modalSubTitle}>
-                  You can’t withdraw contribution during loan repayment
+                  You can’t withdraw contribution right now, because you either
+                  have a running loan, or there was an error in the process.
+                  Kindly try agian, later.
                 </Text>
               </View>
             </View>
           </Modal>
         );
+
       case "withdrawal":
         return (
-          <Modal transparent visible>
-            <View style={styles.modalOverlayCont}>
-              <View style={styles.modalCardCont}>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setWithdrawal(null)}
-                >
-                  <AntDesign name="closecircleo" size={12} color="black" />
-                </TouchableOpacity>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <Modal transparent visible>
+                {withdrawalMutation.isPending && <Loader />}
+                <View style={styles.modalOverlayCont}>
+                  <View style={styles.modalCardCont}>
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={() => setWithdrawal(null)}
+                    >
+                      <AntDesign name="closecircleo" size={12} color="black" />
+                    </TouchableOpacity>
 
-                <View style={styles.modalContent}>
-                  <View style={styles.iconContainer}>
-                    <AntDesign
-                      name="questioncircleo"
-                      size={80}
-                      color={Colors.dark.primary}
-                    />
-                  </View>
+                    <View style={styles.modalContent}>
+                      <View style={styles.iconContainer}>
+                        <AntDesign
+                          name="questioncircleo"
+                          size={80}
+                          color={Colors.dark.primary}
+                        />
+                      </View>
 
-                  <View style={styles.textContainer}>
-                    <Text style={styles.modalTitleCont}>
-                      Do you wish to withdraw your contribution?
-                    </Text>
-                    <Text style={styles.modalSubTitleCont}>
-                      Note that you will be charged ₦500 for the transaction
-                    </Text>
-                  </View>
+                      <View style={styles.textContainer}>
+                        <Text style={styles.modalTitleCont}>
+                          Do you wish to withdraw your contribution?
+                        </Text>
+                        <Text style={styles.modalSubTitleCont}>
+                          Note that you will be charged ₦500 for the transaction
+                        </Text>
+                      </View>
 
-                  <View style={styles.dividerLine} />
+                      <Input
+                        label="How much do you want to withdraw?"
+                        placeholder="Enter Amount"
+                        value={withdrawalAmount}
+                        containerStyle={{ width: "100%" }}
+                        valueType="money"
+                        returnKeyType="done"
+                        onChangeText={setWithdrawalAmount}
+                        keyboardType="phone-pad"
+                      />
 
-                  <View style={styles.bankDetailsSection}>
-                    <View style={styles.bankHeader}>
-                      <Text style={styles.bankDetailsLabel}>
-                        Recipient Bank Details
-                      </Text>
-                      <Text style={styles.accountNumber}>
-                        {userData?.data?.withdrawalSetting?.accountNumber ||
-                          "N/A"}
-                      </Text>
+                      <CustomCheckbox
+                        label="Deduct ₦500 charge from wallet balance"
+                        checked={deductChargeFromBalance}
+                        onToggle={() =>
+                          setDeductChargeFromBalance((prev) => !prev)
+                        }
+                      />
+                      <View style={styles.dividerLine} />
+
+                      <View
+                        style={[
+                          styles.bankDetailsSection,
+                          { alignItems: "center" },
+                        ]}
+                      >
+                        <Text style={styles.bankDetailsLabel}>
+                          Recipient Bank Details
+                        </Text>
+                        <Text style={styles.accountNumber}>
+                          {userData?.data?.withdrawalSetting?.accountNumber ||
+                            "N/A"}
+                        </Text>
+                        <Text style={styles.bankName}>
+                          {selectedBankCode || "N/A"}
+                        </Text>
+                        <Text
+                          style={styles.accountName}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {userData?.data?.withdrawalSetting?.accountName ||
+                            "N/A"}
+                        </Text>
+                      </View>
                     </View>
 
-                    <View style={styles.bankInfo}>
-                      <Text style={styles.accountName}>
-                        {userData?.data?.withdrawalSetting?.accountName ||
-                          "N/A"}
-                      </Text>
-                      <Text style={styles.bankName}>
-                        {userData?.data?.withdrawalSetting?.bankName || "N/A"}
-                      </Text>
+                    <View style={styles.buttonContainer}>
+                      <Button title="Proceed" onPress={handleWithdrawal} />
                     </View>
                   </View>
                 </View>
-                <View style={styles.buttonContainer}>
-                  <Button title="Proceed" onPress={() => handleWithdrawal()} />
-                </View>
-              </View>
-            </View>
-          </Modal>
+              </Modal>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
         );
 
       default:
@@ -368,6 +474,7 @@ export default function DashboardScreen() {
   const onPressedPaymentSetup = () => {
     router.push("/payment-setup/payment-method");
   };
+  // console.log(userData?.data?.isPaymentSetupComplete, "isPaymentSetupComplete");
 
   return (
     <View style={[styles.container, { marginTop: insets.top || 40 }]}>
@@ -399,14 +506,17 @@ export default function DashboardScreen() {
           />
         ))}
       </View>
-      {activeIndex === 0 && !userData?.isPaymentSetupComplete ? (
+      {activeIndex === 0 && !userData?.data?.isPaymentSetupComplete ? (
         <SetupNotice
           title="You haven’t setup payments yet"
           buttonText="Complete Setup"
           onPress={onPressedPaymentSetup}
         />
       ) : activeIndex !== 0 ? (
-        <ContributionsCard />
+        <ContributionsCard
+          amount={userData?.data?.contributionAmount}
+          installmentDesc={userData?.data?.installmentDesc}
+        />
       ) : null}
       <RecentActivityList />
       {renderLoanModal()}
@@ -444,7 +554,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: "90%",
-    height: "50%",
+    height: "40%",
     backgroundColor: "white",
     padding: 20,
     borderRadius: resHeight(3),
@@ -551,8 +661,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 20,
     width: "100%",
-    maxWidth: 400,
-    height: "60%",
+    height: resHeight(72),
     position: "relative",
   },
   modalContent: {
@@ -574,12 +683,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
     lineHeight: 24,
+    fontFamily: "OutfitSemiBold",
   },
   modalSubTitleCont: {
     fontSize: 14,
     color: "#666",
     textAlign: "center",
     lineHeight: 20,
+    fontFamily: "OutfitRegular",
   },
   bankDetailsSection: {
     width: "100%",
@@ -595,29 +706,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     fontWeight: "500",
+    fontFamily: "OutfitRegular",
+    marginBottom: resHeight(1),
   },
   accountNumber: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#000",
+    fontFamily: "OutfitSemiBold",
   },
   bankInfo: {
     alignItems: "flex-end",
+    fontFamily: "OutfitSemiBold",
   },
   accountName: {
     fontSize: 14,
     color: "#000",
     fontWeight: "500",
+    fontFamily: "OutfitSemiBold",
     marginBottom: 4,
   },
   bankName: {
     fontSize: 14,
     color: "#666",
+    fontFamily: "OutfitSemiBold",
   },
   buttonContainer: {
     padding: 20,
     paddingTop: 10,
-    backgroundColor: "#fff",
   },
   cancelButton: {
     flex: 1,

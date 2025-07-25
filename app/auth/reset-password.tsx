@@ -104,6 +104,7 @@ export default function ResetPassword() {
             placeholder="Enter the OTP sent to your email/phone"
             onChangeText={setOtp}
             keyboardType="number-pad"
+            secureTextEntry
           />
 
           <Input

@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+ 
 import Button from "@/components/ui/Buttton";
 import Loader from "@/components/ui/Loader";
 import { Colors } from "@/constants/Colors";
@@ -51,6 +51,7 @@ export default function NotificationSettings() {
         text1: "Notification preferences updated",
       });
       router.push("/(tabs)");
+      queryClient.invalidateQueries({ queryKey: ["users-me"] });
     },
     onError: (err: any) => {
       Toast.show({

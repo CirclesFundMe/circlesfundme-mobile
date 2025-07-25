@@ -1,7 +1,13 @@
 import { resFont, resHeight } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons"; // or your preferred icon set
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface ProfileOptionCardProps {
   title: string;
@@ -26,9 +32,11 @@ export default function ProfileOptionCard({
       <Text style={[styles.title, isLogout && { color: "#D01D1D" }]}>
         {title}
       </Text>
-      <Text style={[styles.title, subTitle && { color: "#D01D1D" }]}>
-        {subTitle ? subTitle : ""}
-      </Text>
+      {subTitle && (
+        <Text style={[styles.title, subTitle && { color: "#D01D1D" }]}>
+          {subTitle ? subTitle : ""}
+        </Text>
+      )}
       <Ionicons
         name="chevron-forward"
         size={18}
@@ -45,10 +53,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: resHeight(1.8),
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    ...Platform.select({
+      android: {},
+      ios: { shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4 },
+    }),
   },
   iconContainer: {
     width: resHeight(5),

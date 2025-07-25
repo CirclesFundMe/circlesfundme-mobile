@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import {
   AntDesign,
   FontAwesome5,
@@ -44,13 +43,14 @@ export default function ProfileScreen() {
   const [logOut, setLogOutOpen] = useState<"logout" | null>(null);
 
   const sendOtpMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (navigateTo: string) =>
       handleFetch({
         endpoint: "accounts/send-onboarding-otp",
         method: "POST",
         body: { email: userData?.data?.email },
-      }),
-    onSuccess: (res: any) => {
+      }).then((res) => ({ res, navigateTo })),
+  
+    onSuccess: ({ res, navigateTo }) => {
       if (res?.statusCode !== "200" && res?.status !== 200) {
         Toast.show({
           type: "error",
@@ -59,13 +59,16 @@ export default function ProfileScreen() {
         });
         return;
       }
+  
       Toast.show({
         type: "success",
         text1: "OTP Sent",
         text2: "Follow the instructions sent to your email",
       });
-      router.push("/profile/update-password-setting");
+  
+      router.push(navigateTo as any);
     },
+  
     onError: (error: any) => {
       Toast.show({
         type: "error",
@@ -74,6 +77,7 @@ export default function ProfileScreen() {
       });
     },
   });
+  
 
   const handleLogout = () => {
     setLogOutOpen(null);
@@ -131,7 +135,9 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Image
               source={{
-                uri: userData?.data?.profilePictureUrl || PROFILE_IMG,
+                uri: userData?.data?.profilePictureUrl?.trim()
+                  ? userData.data.profilePictureUrl
+                  : PROFILE_IMG,
               }}
               style={styles.avatar}
             />
@@ -154,16 +160,14 @@ export default function ProfileScreen() {
           />
           <ProfileOptionCard
             title="Update Password"
-            onPress={() => {
-              sendOtpMutation.mutate();
-            }}
+            onPress={() => sendOtpMutation.mutate("/profile/update-password-setting")}
             icon={
               <Ionicons name="lock-closed-outline" size={20} color="#00C281" />
             }
           />
           <ProfileOptionCard
-            title="Card Settings"
-            onPress={() => router.push("/profile/card-setting")}
+            title="Update Card Settings"
+            onPress={() => sendOtpMutation.mutate("/profile/verify-card-otp")}
             icon={
               <MaterialIcons name="credit-card" size={20} color="#00C281" />
             }

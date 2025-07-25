@@ -16,7 +16,9 @@ export default function UserGreeting({ name, avatarUrl }: Props) {
   return (
     <View style={styles.container}>
       <Image
-        source={{ uri: avatarUrl || PROFILE_IMG }}
+        source={{
+          uri: avatarUrl?.trim() ? avatarUrl : PROFILE_IMG,
+        }}
         style={styles.avatar}
         resizeMode="cover"
       />

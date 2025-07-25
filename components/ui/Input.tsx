@@ -34,7 +34,21 @@ interface InputProps {
   showInfoIcon?: boolean;
   infoTitle?: string;
   infoContent?: string;
-  valueType?: string; 
+  valueType?: string;
+  returnKeyType?:
+    | "done"
+    | "go"
+    | "next"
+    | "search"
+    | "send"
+    | "none"
+    | "previous"
+    | "default"
+    | "google"
+    | "join"
+    | "route"
+    | "yahoo"
+    | "emergency-call";
 }
 
 const Input: React.FC<InputProps> = ({
@@ -52,6 +66,7 @@ const Input: React.FC<InputProps> = ({
   errorMessage,
   maxLength,
   editable,
+  returnKeyType = "default",
   showInfoIcon = false,
   infoTitle = "",
   infoContent = "",
@@ -95,6 +110,7 @@ const Input: React.FC<InputProps> = ({
                 editable === false && { backgroundColor: "#F5F5F5" },
               ]}
               value={value}
+              returnKeyType={returnKeyType || "default"}
               onChangeText={handleTextChange}
               placeholder={placeholder}
               placeholderTextColor="#999"

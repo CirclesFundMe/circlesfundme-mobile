@@ -36,6 +36,7 @@ export default function ProfileSetting() {
       phoneNumber: string;
       dateOfBirth: string;
       gender: string;
+      email: string;
       contributionAmount: string;
       incomeAmount: string;
       profilePictureUrl?: string;
@@ -45,18 +46,33 @@ export default function ProfileSetting() {
       contributionScheme?: {
         name?: string;
       };
+      autoLoanDetail?: {
+        costOfVehicle: number;
+        preLoanContributionAmount: number;
+        postLoanWeeklyContribution: number;
+        totalRepayment: number;
+      };
     };
   };
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [scheme, setScheme] = useState("");
   const [income, setIncome] = useState("");
+  const [costOfVehicle, setCostOfVehicle] = useState(0);
+  const [preLoanContributionAmount, setPreLoanContributionAmount] = useState<
+    number | string
+  >(0);
+  const [postLoanWeeklyContribution, setPostLoanWeeklyContribution] =
+    useState(0);
+  const [totalRepayment, setTotalRepayment] = useState(0);
+
   const [contribution, setContribution] = useState("");
   const [pSetting, setPSetting] = useState<"pSetting" | null>(null);
   const { image, pickImage, clearImage } = useImagePicker();
@@ -70,14 +86,25 @@ export default function ProfileSetting() {
         phoneNumber,
         dateOfBirth,
         gender,
+        email,
         contributionAmount,
         incomeAmount,
         contributionScheme,
+        autoLoanDetail,
       } = userData.data;
       setFullName(`${firstName} ${lastName}`);
       setPhone(phoneNumber || "");
       setDob(dateOfBirth ? moment(dateOfBirth).format("DD/MM/YYYY") : "");
       setGender(gender || "");
+      setEmail(email || "");
+      setPostLoanWeeklyContribution(
+        autoLoanDetail?.postLoanWeeklyContribution || 0
+      );
+      setPreLoanContributionAmount(
+        autoLoanDetail?.preLoanContributionAmount || 0
+      );
+      setTotalRepayment(autoLoanDetail?.totalRepayment || 0);
+      setCostOfVehicle(autoLoanDetail?.costOfVehicle || 0);
       setScheme(contributionScheme?.name || "");
       setContribution(contributionAmount ? String(contributionAmount) : "");
       setIncome(incomeAmount ? String(incomeAmount) : "");
@@ -210,6 +237,7 @@ export default function ProfileSetting() {
   const contributionValue = parseFloat(contribution.replace(/,/g, ""));
 
   const isValidContribution = contributionValue <= maxPercentage * incomeValue;
+  const isAssetFinance = scheme === "Auto Financing";
 
   const handleSubmit = () => {
     if (!userData?.data) return;
@@ -262,10 +290,9 @@ export default function ProfileSetting() {
           <TouchableOpacity onPress={pickImage}>
             <Image
               source={{
-                uri:
-                  image?.uri ||
-                  userData?.data?.profilePictureUrl ||
-                  PROFILE_IMG,
+                uri: userData?.data?.profilePictureUrl?.trim()
+                  ? userData.data.profilePictureUrl
+                  : PROFILE_IMG,
               }}
               style={styles.avatar}
             />
@@ -303,6 +330,13 @@ export default function ProfileSetting() {
           onChangeText={setFullName}
         />
         <Input
+          label="Email"
+          placeholder="Enter email address"
+          value={email}
+          onChangeText={setEmail}
+          editable={false}
+        />
+        <Input
           label="Phone Number"
           placeholder="Enter Your Phone Number"
           value={phone}
@@ -329,7 +363,6 @@ export default function ProfileSetting() {
           }}
           onCancel={() => setShowPicker(false)}
         />
-
         <SelectInput
           label="Gender"
           value={gender}
@@ -337,7 +370,6 @@ export default function ProfileSetting() {
           placeholder="Select Gender"
           options={["Male", "Female", "Other"]}
         />
-
         <SelectInput
           label="Contribution Scheme"
           value={scheme}
@@ -350,34 +382,87 @@ export default function ProfileSetting() {
             "Asset Finance",
           ]}
         />
-        <Input
-          label={`What’s your ${
-            scheme === "Monthly Scheme" ? "monthly" : "weekly"
-          } income (NGN)?`}
-          placeholder="Enter Amount"
-          value={formatAmount(income)}
-          editable={false}
-          onChangeText={setIncome}
-          keyboardType="phone-pad"
-        />
-        <Input
-          label={`What’s your preferred ${
-            scheme === "Monthly Scheme" ? "monthly" : "weekly"
-          } contribution`}
-          placeholder="Enter Amount"
-          value={formatAmount(contribution)}
-          valueType="money"
-          editable={false}
-          onChangeText={setContribution}
-          keyboardType="phone-pad"
-        />
-        {!isValidContribution && contribution && (
+        {isAssetFinance ? (
+          <View>
+            <Input
+              label="What is the cost of the vehicle?"
+              placeholder="Enter Amount"
+              value={formatAmount(costOfVehicle)}
+              editable={false}
+              valueType="money"
+              keyboardType="phone-pad"
+            />
+            <Input
+              label={`Total Monthly Contribution`}
+              value={formatAmount(preLoanContributionAmount)}
+              editable={false}
+              valueType="money"
+              showInfoIcon={true}
+              infoTitle="Total Weekly Contribution"
+              infoContent={`Your monthly contribution plus the pre-loan service charge.`}
+            />
+            <Input
+              label="Post-Loan Weekly Repayment over 4 years"
+              placeholder="Enter Amount"
+              value={formatAmount(postLoanWeeklyContribution)}
+              editable={false}
+              valueType="money"
+              showInfoIcon={true}
+              infoTitle="Post-Loan Weekly Repayment over 4 years"
+              infoContent="Total Fees = Eligible Loan + Loan Management Fee.
+                      Post-Loan Charge (0.05%) = 0.05% of Total Fees.
+                      Total to Repay Over 4 Years: = Total Fees + Post-Loan Charges.
+                      Weekly Repayment = Total Repayment ÷ 208 weeks"
+            />
+            <Input
+              label="Total Repayment"
+              placeholder="Enter Amount"
+              value={formatAmount(totalRepayment)}
+              editable={false}
+              valueType="money"
+              showInfoIcon={true}
+              infoTitle="Total Repayment"
+              infoContent="Total Fees = Eligible Loan + Loan Management Fee.
+              Post-Loan Charge (0.05%) = 0.05% of Total Fees * 48.
+              Total repayment = Total Fees + Post-Loan Charges."
+            />
+          </View>
+        ) : (
+          <View>
+            <Input
+              label={`What’s your ${
+                scheme === "Weekly Contribution Scheme"
+                  ? "weekly revenue (NGN)?"
+                  : "monthly income (NGN)?"
+              } `}
+              placeholder="Enter Amount"
+              value={formatAmount(income)}
+              editable={false}
+              valueType="money"
+              onChangeText={setIncome}
+              keyboardType="phone-pad"
+            />
+            <Input
+              label={`What’s your ${
+                scheme === "Weekly Contribution Scheme" ? "weekly" : "monthly"
+              } contribution (NGN)?`}
+              placeholder="Enter Amount"
+              value={formatAmount(contribution)}
+              editable={false}
+              valueType="money"
+              onChangeText={setIncome}
+              keyboardType="phone-pad"
+            />
+          </View>
+        )}
+
+        {/* {!isValidContribution && contribution && (
           <Text style={styles.error}>
             You cannot contribute more than{" "}
             {scheme === "Weekly Contribution Scheme" ? "20%" : "30%"} of your
             income.
           </Text>
-        )}
+        )} */}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <View style={{ marginBottom: resHeight(5) }} />
         <Button title="Continue" onPress={handleSubmit} />
