@@ -31,11 +31,21 @@ export default function PersonalInfo() {
       });
       return;
     }
-
+  
+    const nameParts = fullName.trim().split(/\s+/); 
+    if (nameParts.length < 2) {
+      Toast.show({
+        type: "error",
+        text1: "Full Name Required",
+        text2: "Please enter both your first and last name.",
+      });
+      return;
+    }
+  
     const phoneDigits = phone.replace(/\D/g, "");
-
+  
     const isValidNigerianPhone = /^0[789][01]\d{8}$/.test(phoneDigits);
-
+  
     if (!isValidNigerianPhone) {
       Toast.show({
         type: "error",
@@ -45,7 +55,7 @@ export default function PersonalInfo() {
       });
       return;
     }
-
+  
     const age = moment().diff(moment(dob, "DD/MM/YYYY"), "years");
     if (age < 18) {
       Toast.show({
@@ -55,7 +65,7 @@ export default function PersonalInfo() {
       });
       return;
     }
-
+  
     router.push({
       pathname: "/sign-up/verify-identity",
       params: {
@@ -66,7 +76,7 @@ export default function PersonalInfo() {
       },
     });
   };
-
+  
   return (
     <ScrollView
       contentContainerStyle={[

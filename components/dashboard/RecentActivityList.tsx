@@ -1,6 +1,11 @@
 import ExportIcons from "@/assets/icons/ExportIcons";
 import ImportIcons from "@/assets/icons/ImportIcons";
+import Loader from "@/components/ui/Loader";
+import handleFetch from "@/services/api/handleFetch";
+
 import { resFont } from "@/utils/utils";
+import { useQuery } from "@tanstack/react-query";
+import moment from "moment";
 import React from "react";
 import {
   Platform,
@@ -11,108 +16,147 @@ import {
   View,
 } from "react-native";
 
-const DATA = [
-  {
-    title: "YESTERDAY",
-    data: [
-      {
-        id: "1",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "+ $120",
-      },
-      {
-        id: "2",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "- $120",
-      },
-    ],
-  },
-  {
-    title: "12 JUNE",
-    data: [
-      {
-        id: "3",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "+ $120",
-      },
-      {
-        id: "4",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "- $120",
-      },
-    ],
-  },
-  {
-    title: "13 JUNE",
-    data: [
-      {
-        id: "5",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "+ $120",
-      },
-      {
-        id: "6",
-        title: "You just made a contribution",
-        time: "4:30 PM",
-        amount: "- $120",
-      },
-    ],
-  },
-];
+type Activity = {
+  id: string;
+  title: string;
+  type: number;
+  data: string;
+  date?: string;
+};
+
+type GroupedActivity = {
+  id: string;
+  title: string;
+  time: string;
+  amount: string;
+};
+
+type Section = {
+  title: string;
+  data: GroupedActivity[];
+};
 
 export default function RecentActivityList() {
+  const { data, isLoading } = useQuery<{ data: Activity[] }>({
+    queryKey: ["my-recent-activities"],
+    queryFn: () =>
+      handleFetch({
+        endpoint: "users/my-recent-activities",
+        auth: true,
+        pQuery: {
+          PageSize: 20,
+          Type: "None",
+          PageNumber: 1,
+        },
+      }),
+  });
+
+  const activities = data?.data || [];
+
+  const formatData = (items: Activity[]): Section[] => {
+    const grouped: Record<string, GroupedActivity[]> = {};
+
+    items.forEach((item) => {
+      const isContribution = item.type === 1;
+      const amount = parseFloat(item.data).toFixed(2);
+      const prefix = isContribution ? "+" : "-";
+      const label = isContribution ? "Contribution" : "Withdrawal";
+
+      const dateMoment = item.date ? moment(item.date) : null;
+
+      const dateKey = dateMoment?.isValid()
+        ? dateMoment.calendar(null, {
+            sameDay: "[TODAY]",
+            lastDay: "[YESTERDAY]",
+            lastWeek: "DD MMMM",
+            sameElse: "DD MMMM",
+          })
+        : "N/A";
+
+      const time = dateMoment?.isValid() ? dateMoment.format("h:mm A") : "N/A";
+
+      if (!grouped[dateKey]) grouped[dateKey] = [];
+
+      grouped[dateKey].push({
+        id: item.id,
+        title: item.title || label,
+        time,
+        amount: `${prefix} ₦${amount}`,
+      });
+    });
+
+    return Object.entries(grouped).map(([title, data]) => ({ title, data }));
+  };
+
+  const sections: Section[] = formatData(activities);
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <Text style={styles.header}>Recent Activity</Text>
-        <SectionList
-          sections={DATA}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 32 }}
-          renderSectionHeader={({ section: { title } }) => (
-            <Text style={styles.sectionHeader}>{title}</Text>
-          )}
-          renderItem={({ item }) => {
-            const isCredit = item.amount.includes("+");
-            return (
-              <View style={styles.item}>
-                <View style={styles.left}>
-                  <View
+
+        {isLoading ? (
+          <View>
+            <Loader />
+          </View>
+        ) : activities.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 32 }}
+            renderSectionHeader={({ section: { title } }) => (
+              <Text style={styles.sectionHeader}>{title}</Text>
+            )}
+            renderItem={({ item }) => {
+              const isCredit = item.amount.includes("+");
+              return (
+                <View style={styles.item}>
+                  <View style={styles.left}>
+                    <View
+                      style={[
+                        styles.iconContainer,
+                        {
+                          backgroundColor: isCredit ? "#e0f9f1" : "#fde9e9",
+                        },
+                      ]}
+                    >
+                      {isCredit ? <ImportIcons /> : <ExportIcons />}
+                    </View>
+                    <View style={{ marginLeft: 10 }}>
+                      <Text style={styles.title}>{item.title}</Text>
+                      <Text style={styles.time}>{item.time}</Text>
+                    </View>
+                  </View>
+                  <Text
                     style={[
-                      styles.iconContainer,
-                      { backgroundColor: isCredit ? "#e0f9f1" : "#fde9e9" },
+                      styles.amount,
+                      { color: isCredit ? "#00C281" : "#D01D1D" },
                     ]}
                   >
-                    {isCredit ? <ImportIcons /> : <ExportIcons />}
-                  </View>
-                  <View style={{ marginLeft: 10 }}>
-                    <Text style={styles.title}>{item.title}</Text>
-                    <Text style={styles.time}>{item.time}</Text>
-                  </View>
+                    {item.amount}
+                  </Text>
                 </View>
-                <Text
-                  style={[
-                    styles.amount,
-                    { color: isCredit ? "#00C281" : "#D01D1D" },
-                  ]}
-                >
-                  {item.amount}
-                </Text>
-              </View>
-            );
-          }}
-          stickySectionHeadersEnabled={false}
-          showsVerticalScrollIndicator={false}
-        />
+              );
+            }}
+            stickySectionHeadersEnabled={false}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
 }
+
+const EmptyState = () => (
+  <View style={styles.emptyContainer}>
+    <Text style={styles.emptyTitle}>No recent activity</Text>
+    <Text style={styles.emptySub}>
+      You haven’t performed any contribution or withdrawal yet.
+    </Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -173,5 +217,24 @@ const styles = StyleSheet.create({
     fontSize: resFont(12),
     fontWeight: "bold",
     fontFamily: "OutfitMedium",
+  },
+  emptyContainer: {
+    marginTop: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  emptyTitle: {
+    fontSize: resFont(14),
+    fontFamily: "OutfitSemiBold",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  emptySub: {
+    fontSize: resFont(11),
+    fontFamily: "OutfitRegular",
+    color: "#6B6B6B",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
