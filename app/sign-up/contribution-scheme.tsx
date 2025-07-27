@@ -103,6 +103,7 @@ export default function ContributionScheme() {
     eligibleLoan: "",
     eligibleLoanDescription: "",
     serviceCharge: "",
+    totalRepayment: "",
   });
 
   const breakdownMutation = useMutation({
@@ -165,6 +166,7 @@ export default function ContributionScheme() {
         eligibleLoan: breakdown.eligibleLoan,
         eligibleLoanDescription: breakdown.eligibleLoanDescription,
         serviceCharge: breakdown.serviceCharge,
+        totalRepayment: breakdown.totalRepayment,
       });
     },
     onError: (error: any) => {
@@ -745,7 +747,7 @@ export default function ContributionScheme() {
                       <View style={styles.groupText}>
                         <Text style={styles.summaryText}>Total Repayment</Text>
                         <Text style={styles.boldText}>
-                          {regularBreakdown.principalLoan}
+                          {regularBreakdown. totalRepayment}
                         </Text>
                       </View>
                       <View style={{ marginBottom: resHeight(1) }} />
